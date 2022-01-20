@@ -9,6 +9,8 @@ Created on Thu Jan 20 09:55:00 2022
 import csv
 import pandas as pd
 import matplotlib.pyplot as plt
+from math import sin, cos, sqrt, atan2, radians
+
 
 
 #path = '../InputData/ww_ten_points.csv'
@@ -27,7 +29,7 @@ def showFileContents(path):
     return
 
 def saveCsvtoDf(path):
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, usecols= ['Z','X','Y'])
     return df
 
 
@@ -52,7 +54,53 @@ def plotData(df):
         plt.pause(300)
     return fig
 
+
+def dataTo2d(df):
+    size = df.shape[0]
+    for i,value in enumerate(range(size)):
+   
+        if((i+1)<size):
+            lat0 = df['X'][i]
+            lat1 = df['X'][i+1]
+            lon0 = df['Y'][i]
+            lon1 = df['X'][i+1]
+            d = calculteDistance(lat0, lon0, lat1, lon1) 
+            
+            
+        
+def calculteDistance(lat0,lng0,lat1,lng1):
+    # approximate radius of earth in km
+    R = 6373.0
+    
+    lat1 = radians(lat0)
+    lon1 = radians(lng0)
+    lat2 = radians(lat1)
+    lon2 = radians(lng1)
+    
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    
+    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    
+    distance = R * c
+    print("Result:", distance)
+    return distance
+
+
+    
+    
+        
+# lat0 = 52.2296756
+# lng0 = 21.0122287
+# lat1 = 52.406374
+# lng1 = 16.9251681
+
+
 df = saveCsvtoDf(path)
-plt = plotData(df)
-print(plt)
-plt.draw()
+dataTo2d(df)
+
+#a =calculteDistance(lat0, lng0, lat1, lng1)
+
+#fig = plotData(df)
+
