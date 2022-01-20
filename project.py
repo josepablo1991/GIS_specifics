@@ -9,8 +9,6 @@ Created on Thu Jan 20 09:55:00 2022
 import csv
 import pandas as pd
 import matplotlib.pyplot as plt
-from math import sin, cos, sqrt, atan2, radians
-
 import mpu
 
 
