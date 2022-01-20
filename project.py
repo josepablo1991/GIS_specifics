@@ -56,6 +56,7 @@ def plotData(df):
 
 def dataTo2d(df):
     size = df.shape[0]
+    newList = []
     for i,value in enumerate(range(size)):
    
         if((i+1)<size):
@@ -65,6 +66,8 @@ def dataTo2d(df):
             lon1 = df['Y'][i+1]
             d = calculteDistance(lat0, lon0, lat1, lon1) 
             print('m=',d*1000)
+            newList.append((d*1000,df['Z'][i]))
+    return newList
             
             
         
@@ -89,8 +92,8 @@ lon2 = 16.9251681
 
 
 df = saveCsvtoDf(path)
-dataTo2d(df)
-
+a = dataTo2d(df)
+print(a)
 #a =calculteDistance(lat1,lon1,lat2,lon2)
 
 #fig = plotData(df)
