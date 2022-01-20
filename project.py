@@ -11,6 +11,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from math import sin, cos, sqrt, atan2, radians
 
+import mpu
 
 
 #path = '../InputData/ww_ten_points.csv'
@@ -63,44 +64,36 @@ def dataTo2d(df):
             lat0 = df['X'][i]
             lat1 = df['X'][i+1]
             lon0 = df['Y'][i]
-            lon1 = df['X'][i+1]
+            lon1 = df['Y'][i+1]
             d = calculteDistance(lat0, lon0, lat1, lon1) 
+            print('m=',d*1000)
             
             
         
-def calculteDistance(lat0,lng0,lat1,lng1):
-    # approximate radius of earth in km
-    R = 6373.0
-    
-    lat1 = radians(lat0)
-    lon1 = radians(lng0)
-    lat2 = radians(lat1)
-    lon2 = radians(lng1)
-    
-    dlon = lon2 - lon1
-    dlat = lat2 - lat1
-    
-    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    
-    distance = R * c
-    print("Result:", distance)
-    return distance
+def calculteDistance(lat1,lon1,lat2,lon2):
+
+    dist = mpu.haversine_distance((lat1, lon1), (lat2, lon2))
+    print(dist)
+
+    return dist
 
 
     
-    
-        
-# lat0 = 52.2296756
-# lng0 = 21.0122287
-# lat1 = 52.406374
-# lng1 = 16.9251681
+
+# Point one
+lat1 = 52.2296756
+lon1 = 21.0122287
+
+# Point two
+lat2 = 52.406374
+lon2 = 16.9251681
+
 
 
 df = saveCsvtoDf(path)
 dataTo2d(df)
 
-#a =calculteDistance(lat0, lng0, lat1, lng1)
+#a =calculteDistance(lat1,lon1,lat2,lon2)
 
 #fig = plotData(df)
 
