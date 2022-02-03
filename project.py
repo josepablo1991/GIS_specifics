@@ -79,22 +79,23 @@ def calculteDistance(lat1,lon1,lat2,lon2):
     return dist
 
 
+#some comment
+
     
 
-# Point one
-lat1 = 52.2296756
-lon1 = 21.0122287
+# # Point one
+# lat1 = 52.2296756
+# lon1 = 21.0122287
 
-# Point two
-lat2 = 52.406374
-lon2 = 16.9251681
+# # Point two
+# lat2 = 52.406374
+# lon2 = 16.9251681
 
 
 
 df = saveCsvtoDf(path)
 a = dataTo2d(df)
-print(a)
 #a =calculteDistance(lat1,lon1,lat2,lon2)
 
-#fig = plotData(df)
+fig = plotData(df)
 
