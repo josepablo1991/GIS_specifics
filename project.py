@@ -80,7 +80,7 @@ def calculteDistance(lat1,lon1,lat2,lon2):
 
 
 #some comment
-#comment for Jose 
+#comment for Stevie 
     
 
 # # Point one
