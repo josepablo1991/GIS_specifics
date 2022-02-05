@@ -10,6 +10,7 @@ import csv
 import pandas as pd
 import matplotlib.pyplot as plt
 import mpu
+import numpy as np
 
 
 #path = '../InputData/ww_ten_points.csv'
@@ -24,7 +25,6 @@ def showFileContents(path):
         spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
         for row in spamreader:
             print(', '.join(row))
-    
     return
 
 def saveCsvtoDf(path):
@@ -70,13 +70,68 @@ def dataTo2d(df):
     return newList
             
             
-        
 def calculteDistance(lat1,lon1,lat2,lon2):
-
     dist = mpu.haversine_distance((lat1, lon1), (lat2, lon2))
     print(dist)
-
     return dist
+
+
+def preserveFlag(df): 
+    groupedRiver = df.groupby('r_id')
+    startsEnds = pd.concat([groupedRiver.head(1), groupedRiver.tail(1)])
+    oids = [i for i in startsEnds['o_id']]
+    df['preserveFlag'] = np.where(df.duplicated(['X', 'Y'], keep=False), 1, 0)
+    df['preserveFlag'] = np.where(df['o_id'].isin(oids), 1, df['preserveFlag'])
+    return df
+
+
+def from3dTo2d(df):
+    size = df.shape[0]
+    distances = []
+    for i in range(size):
+        if (i == 0):
+            distances.append(0)
+        else:
+            lat0 = df['X'][i-1]
+            lat1 = df['X'][i]
+            lon0 = df['Y'][i-1]
+            lon1 = df['Y'][i]
+            d = calculteDistance(lat0, lon0, lat1, lon1)
+            distances.append(d*1000)
+    accDist = []
+    j = 0
+    for i in range(size):
+        j += distances[i]
+        accDist.append(j)
+    df2d = df.drop(['X', 'Y', 'o_id'], axis=1)
+    df2d['accDist'] = accDist
+    return df2d
+
+
+def weHaveToAccumulateDistancesByEachRiver(df):
+    size = df.shape[0]
+    distances = []
+    for i in range(size):
+        if (i == 0):
+            distances.append(0)
+        else:
+            lat0 = df['X'][i-1]
+            lat1 = df['X'][i]
+            lon0 = df['Y'][i-1]
+            lon1 = df['Y'][i]
+            d = calculteDistance(lat0, lon0, lat1, lon1)
+            distances.append(d*1000)
+    groups = df.groupby('r_id')
+    keys = groups.groups.keys()
+    accDist = []
+    j = 0
+    for k in keys:
+        subDf = groups.get_group(k)
+        for i in range(subDf.shape[0]):
+            j += distances[i]
+            accDist.append(j)
+        df['accDist'] = accDist
+    return df
 
 
 #some comment
