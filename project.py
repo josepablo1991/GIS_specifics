@@ -129,7 +129,7 @@ def simplifyDf3D(df,epsilon:float):
     return newDf
 
     
-
+#add this simplify segment --> df X,Y,Z ---> df same shape X,Y,Z
 
 # passes a the data 
 
