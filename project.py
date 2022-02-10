@@ -34,7 +34,7 @@ def saveCsvtoDf(path):
     return df
 
 
-def plotData(df):
+def customePlotData(df):
     x = df.X
     y = df.Y
     z = df.Z
@@ -59,6 +59,9 @@ def plotData(df):
 def dataTo2d(df):
     size = df.shape[0]
     newList = []
+    
+    startX = df['X'][0]
+    startY = df['Y'][0]
     for i,value in enumerate(range(size)):
    
         if((i+1)<size):
@@ -66,14 +69,14 @@ def dataTo2d(df):
             lat1 = df['X'][i+1]
             lon0 = df['Y'][i]
             lon1 = df['Y'][i+1]
-            d = calculteDistance(lat0, lon0, lat1, lon1) 
+            d = calculteDistance(startX, startY, lat1, lon1) 
             #print('m=',d*1000,lat0, lon0, lat1, lon1)
             newList.append((d*1000,df['Z'][i]))
     return newList
             
             
         
-def calculteDistance(lat1,lon1,lat2,lon2):
+def calculteDistance(lat1:float,lon1:float,lat2:float,lon2:float):
 
     dist = mpu.haversine_distance((lat1, lon1), (lat2, lon2))
     print(dist)
@@ -81,21 +84,21 @@ def calculteDistance(lat1,lon1,lat2,lon2):
     return dist
 
 
-def customPlot(lst):
+def customPlot(lst:list):
     x = []
     y = []
     general = []
     for i,element in enumerate(lst):
-        y.append(lst[i][0])
-        x.append(lst[i][1])
+        x.append(lst[i][0])
+        y.append(lst[i][1])
         general.append(lst[i][0])
         general.append(lst[i][1])
     x.reverse()
     y.reverse()
     #print(general)
-    return  plt.plot(x,y)
+    return  plt.scatter(x,y)
 
-def getXandY(df):
+def dfToListXYZ(df):
     size = df.shape[0]
     general = []
     
@@ -105,24 +108,27 @@ def getXandY(df):
         general.append(df['Z'][i])
     return general
 
+def dfToListXY(df):
+    size = df.shape[0]
+    general = []
+    
+    for i,elemnt in enumerate(range(size)):
+        general.append(df['X'][i])
+        general.append(df['Y'][i])
+    return general
+
 def fromArrayToDF(arr):
     df = pd.DataFrame(data=arr, columns=["X", "Y","Z"])
     return df
 
+def simplifyDf3D(df,epsilon:float):
+    lst = dfToListXYZ(df)
+    M = np.array(lst).reshape(10, 3)
+    simplyfiedM = rdp(M,epsilon)
+    newDf = fromArrayToDF(simplyfiedM)
+    return newDf
+
     
-
-
-#some comment
-#comment for Stevie 
-    
-
-# # Point one
-# lat1 = 52.2296756
-# lon1 = 21.0122287
-
-# # Point two
-# lat2 = 52.406374
-# lon2 = 16.9251681
 
 
 # passes a the data 
@@ -135,19 +141,11 @@ a = dataTo2d(df)
 
 #implements simplidication
 
+b = simplifyDf3D(df,0.001)
 
-#a =calculteDistance(lat1,lon1,lat2,lon2)
-
-#fig = plotData(df)
-
-c = getXandY(df)
-
-M = np.array(c).reshape(10, 3)
-d = rdp(M,0.001)
-e = fromArrayToDF(d)
-fig = plotData(e)
-fig2 = plotData(df)
+#fig = customePlotData(b)
+#fig2 = customePlotData(df)
 
 
-customPlot(a)
+#customPlot(a)
 
