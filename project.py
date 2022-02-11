@@ -166,9 +166,9 @@ def simplifySegmentXYZ(df):
     return b
 
 
-#add the code from the algorythm from the rdp
-#make the df fill again with interpolated values. 
-#add this simplify segment --> df X,Y,Z ---> df same shape X,Y,Z
+#add the code from the algorythm from the rdp PENDING
+#make the df fill again with interpolated values.  DONE
+#add this simplify segment --> df X,Y,Z ---> df same shape X,Y,Z 
 
 # passes a the data 
 
