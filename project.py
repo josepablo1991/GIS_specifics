@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import mpu
 from rdp import rdp
 import numpy as np
+from scipy import interpolate
 
 
 #path = '../InputData/ww_ten_points.csv'
@@ -79,7 +80,6 @@ def dataTo2d(df):
 def calculteDistance(lat1:float,lon1:float,lat2:float,lon2:float):
 
     dist = mpu.haversine_distance((lat1, lon1), (lat2, lon2))
-    print(dist)
 
     return dist
 
@@ -128,7 +128,46 @@ def simplifyDf3D(df,epsilon:float):
     newDf = fromArrayToDF(simplyfiedM)
     return newDf
 
+
+
+def refilldf(newdf,olddf):
+    newSize = newdf.shape[0]
+    resetedDf =olddf.assign(Z=0)
+    oldSize = resetedDf.shape[0]
+    x = newdf.loc[:,('X')].tolist()
+    z = newdf.loc[:,('Z')].tolist()
+    funtion = getInterpolateFunction(x,z)
+
+    #b = pd.concat([newdf,a]).drop_duplicates().reset_index(drop=True)
     
+    for i,element in enumerate(range(oldSize)):
+        for j,newElement in enumerate(range(newSize)):
+            if(resetedDf['X'][i] == newdf['X'][j]):
+                resetedDf.loc[i,('Z')] = newdf.loc[j,('Z')]    
+        
+    
+    resetDfSize = resetedDf.shape[0]
+    for i,element in enumerate(range(resetDfSize)):
+        if(resetedDf.loc[i,('Z')] == 0 ):
+            resetedDf.loc[i,('Z')] = funtion(resetedDf.loc[i,('X')])
+
+    return resetedDf
+
+def getInterpolateFunction(x,z):
+    f = interpolate.interp1d(x, z)
+    return f
+
+
+#implements simplidication of segment
+
+def simplifySegmentXYZ(df):
+    a = simplifyDf3D(df,0.001)
+    b = refilldf(a,df)
+    return b
+
+
+#add the code from the algorythm from the rdp
+#make the df fill again with interpolated values. 
 #add this simplify segment --> df X,Y,Z ---> df same shape X,Y,Z
 
 # passes a the data 
@@ -138,10 +177,9 @@ df = saveCsvtoDf(path)
 #Makes the data into 2d
 a = dataTo2d(df)
 
+#implements simplidication THIS IS the function you need to use Stevie
 
-#implements simplidication
-
-b = simplifyDf3D(df,0.001)
+b = simplifySegmentXYZ(df)
 
 #fig = customePlotData(b)
 #fig2 = customePlotData(df)
