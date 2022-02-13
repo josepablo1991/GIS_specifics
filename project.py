@@ -27,6 +27,7 @@ def showFileContents(path):
         spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
         for row in spamreader:
             print(', '.join(row))
+    
     return
 
 def saveCsvtoDf(path):
@@ -75,46 +76,6 @@ def dataTo2d(df):
     return newList
             
             
-def calculteDistance(lat1,lon1,lat2,lon2):
-    dist = mpu.haversine_distance((lat1, lon1), (lat2, lon2))
-    print(dist)
-    return dist
-
-
-def preserveFlag(df): 
-    groupedRiver = df.groupby('r_id')
-    startsEnds = pd.concat([groupedRiver.head(1), groupedRiver.tail(1)])
-    oids = [i for i in startsEnds['o_id']]
-    df['preserveFlag'] = np.where(df.duplicated(['X', 'Y'], keep=False), 1, 0)
-    df['preserveFlag'] = np.where(df['o_id'].isin(oids), 1, df['preserveFlag'])
-    return df
-
-
-def from3dTo2d(df):
-    size = df.shape[0]
-    distances = []
-    for i in range(size):
-        if (i == 0):
-            distances.append(0)
-        else:
-            lat0 = df['X'][i-1]
-            lat1 = df['X'][i]
-            lon0 = df['Y'][i-1]
-            lon1 = df['Y'][i]
-            d = calculteDistance(lat0, lon0, lat1, lon1)
-            distances.append(d*1000)
-    accDist = []
-    j = 0
-    for i in range(size):
-        j += distances[i]
-        accDist.append(j)
-    df2d = df.drop(['X', 'Y', 'o_id'], axis=1)
-    df2d['accDist'] = accDist
-    return df2d
-
-
-#some comment
-#comment for Stevie 
         
 def calculteDistance(lat1:float,lon1:float,lat2:float,lon2:float):
 
@@ -205,6 +166,55 @@ def simplifySegmentXYZ(df):
     return b
 
 
+# Creates a flag for each node, marking those that have to be preserved.
+# 0 = No reason to be kept and therefore can be replaced with interpolated values.
+# 1 = Has an overlapping node and therefore its elevation has to be preserved.
+# 2 = Is a start/end point and therefore its elevation has to be preserved.
+def keepFlag(df): 
+    groupedRiver = df.groupby('r_id')
+    startsEnds = pd.concat([groupedRiver.head(1), groupedRiver.tail(1)])
+    oids = [i for i in startsEnds['o_id']]
+    df['keepFlag'] = np.where(df.duplicated(['X', 'Y'], keep=False), 1, 0)
+    df['keepFlag'] = np.where(df['o_id'].isin(oids), 2, df['keepFlag'])
+    return df
+
+
+# Marks the r_id to which the node is connected to. 
+# 0 means that the node has no other connections other than its own river. 
+def connectedR(df):
+    for i in df.index:
+        x = df.at[i, 'X']
+        y = df.at[i, 'Y']
+        if df.at[i, 'keepFlag'] != 0:
+            targetRow = df.loc[(df['X'] == x) & (df['Y'] == y) & (df.index != i)]
+            targetCell = targetRow.r_id.tolist()
+            if targetCell == []:
+                df.at[i, 'connectedR'] = 0
+            else:
+                df.at[i, 'connectedR'] = targetCell[0]
+        else:
+            df.at[i, 'connectedR'] = 0
+    return df
+
+
+# If keepFlag = 1, select a row where:
+# "the original row's connectedR = the target row's r_id" 
+# & "the original row's r_id = the target row's connectedR"
+# Update the X and Y with the target row's.
+def updateIntersection(df):
+    for i in df.index:
+        if df.at[i, 'keepFlag'] == 1:
+            orid = df.at[i, 'r_id']
+            ocr = df.at[i, 'connectedR']
+            targetRow = df.loc[(df['r_id'] == ocr) & (df['connectedR'] == orid)]
+            originalX = targetRow.X.tolist()
+            originalY = targetRow.Y.tolist()
+            df.at[i, 'X'] = originalX[0]
+            df.at[i, 'Y'] = originalY[0]
+        else:
+            pass
+        
+        
 #add the code from the algorythm from the rdp PENDING
 #make the df fill again with interpolated values.  DONE
 #add this simplify segment --> df X,Y,Z ---> df same shape X,Y,Z 
@@ -225,4 +235,3 @@ b = simplifySegmentXYZ(df)
 
 
 #customPlot(a)
-
