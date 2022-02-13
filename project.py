@@ -10,7 +10,9 @@ import csv
 import pandas as pd
 import matplotlib.pyplot as plt
 import mpu
+from rdp import rdp
 import numpy as np
+from scipy import interpolate
 
 
 #path = '../InputData/ww_ten_points.csv'
@@ -32,7 +34,7 @@ def saveCsvtoDf(path):
     return df
 
 
-def plotData(df):
+def customePlotData(df):
     x = df.X
     y = df.Y
     z = df.Z
@@ -57,6 +59,9 @@ def plotData(df):
 def dataTo2d(df):
     size = df.shape[0]
     newList = []
+    
+    startX = df['X'][0]
+    startY = df['Y'][0]
     for i,value in enumerate(range(size)):
    
         if((i+1)<size):
@@ -64,8 +69,8 @@ def dataTo2d(df):
             lat1 = df['X'][i+1]
             lon0 = df['Y'][i]
             lon1 = df['Y'][i+1]
-            d = calculteDistance(lat0, lon0, lat1, lon1) 
-            print('m=',d*1000)
+            d = calculteDistance(startX, startY, lat1, lon1) 
+            #print('m=',d*1000,lat0, lon0, lat1, lon1)
             newList.append((d*1000,df['Z'][i]))
     return newList
             
@@ -108,49 +113,116 @@ def from3dTo2d(df):
     return df2d
 
 
-def weHaveToAccumulateDistancesByEachRiver(df):
-    size = df.shape[0]
-    distances = []
-    for i in range(size):
-        if (i == 0):
-            distances.append(0)
-        else:
-            lat0 = df['X'][i-1]
-            lat1 = df['X'][i]
-            lon0 = df['Y'][i-1]
-            lon1 = df['Y'][i]
-            d = calculteDistance(lat0, lon0, lat1, lon1)
-            distances.append(d*1000)
-    groups = df.groupby('r_id')
-    keys = groups.groups.keys()
-    accDist = []
-    j = 0
-    for k in keys:
-        subDf = groups.get_group(k)
-        for i in range(subDf.shape[0]):
-            j += distances[i]
-            accDist.append(j)
-        df['accDist'] = accDist
-    return df
-
-
 #some comment
 #comment for Stevie 
+        
+def calculteDistance(lat1:float,lon1:float,lat2:float,lon2:float):
+
+    dist = mpu.haversine_distance((lat1, lon1), (lat2, lon2))
+
+    return dist
+
+
+def customPlot(lst:list):
+    x = []
+    y = []
+    general = []
+    for i,element in enumerate(lst):
+        x.append(lst[i][0])
+        y.append(lst[i][1])
+        general.append(lst[i][0])
+        general.append(lst[i][1])
+    x.reverse()
+    y.reverse()
+    #print(general)
+    return  plt.scatter(x,y)
+
+def dfToListXYZ(df):
+    size = df.shape[0]
+    general = []
     
+    for i,elemnt in enumerate(range(size)):
+        general.append(df['X'][i])
+        general.append(df['Y'][i])
+        general.append(df['Z'][i])
+    return general
 
-# # Point one
-# lat1 = 52.2296756
-# lon1 = 21.0122287
+def dfToListXY(df):
+    size = df.shape[0]
+    general = []
+    
+    for i,elemnt in enumerate(range(size)):
+        general.append(df['X'][i])
+        general.append(df['Y'][i])
+    return general
 
-# # Point two
-# lat2 = 52.406374
-# lon2 = 16.9251681
+def fromArrayToDF(arr):
+    df = pd.DataFrame(data=arr, columns=["X", "Y","Z"])
+    return df
+
+def simplifyDf3D(df,epsilon:float):
+    lst = dfToListXYZ(df)
+    M = np.array(lst).reshape(10, 3)
+    simplyfiedM = rdp(M,epsilon)
+    newDf = fromArrayToDF(simplyfiedM)
+    return newDf
 
 
+
+def refilldf(newdf,olddf):
+    newSize = newdf.shape[0]
+    resetedDf =olddf.assign(Z=0)
+    oldSize = resetedDf.shape[0]
+    x = newdf.loc[:,('X')].tolist()
+    z = newdf.loc[:,('Z')].tolist()
+    funtion = getInterpolateFunction(x,z)
+
+    #b = pd.concat([newdf,a]).drop_duplicates().reset_index(drop=True)
+    
+    for i,element in enumerate(range(oldSize)):
+        for j,newElement in enumerate(range(newSize)):
+            if(resetedDf['X'][i] == newdf['X'][j]):
+                resetedDf.loc[i,('Z')] = newdf.loc[j,('Z')]    
+        
+    
+    resetDfSize = resetedDf.shape[0]
+    for i,element in enumerate(range(resetDfSize)):
+        if(resetedDf.loc[i,('Z')] == 0 ):
+            resetedDf.loc[i,('Z')] = funtion(resetedDf.loc[i,('X')])
+
+    return resetedDf
+
+def getInterpolateFunction(x,z):
+    f = interpolate.interp1d(x, z)
+    return f
+
+
+#implements simplidication of segment
+
+def simplifySegmentXYZ(df):
+    a = simplifyDf3D(df,0.001)
+    b = refilldf(a,df)
+    return b
+
+
+#add the code from the algorythm from the rdp PENDING
+#make the df fill again with interpolated values.  DONE
+#add this simplify segment --> df X,Y,Z ---> df same shape X,Y,Z 
+
+# passes a the data 
 
 df = saveCsvtoDf(path)
-a = dataTo2d(df)
-#a =calculteDistance(lat1,lon1,lat2,lon2)
 
-fig = plotData(df)
+#Makes the data into 2d
+a = dataTo2d(df)
+
+#implements simplidication THIS IS the function you need to use Stevie
+
+b = simplifySegmentXYZ(df)
+
+#fig = customePlotData(b)
+#fig2 = customePlotData(df)
+
+
+#customPlot(a)
 
