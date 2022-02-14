@@ -223,12 +223,13 @@ def makeSegmentBlocks(df):
     #list of segments
     segments = df['r_id'].unique()
     segmentsList = []
-    size = df.shape[0]
     for segmentValue in segments:
         segmentDf = df.loc[df['r_id'] == segmentValue]
-        a = simplifySegmentXYZ(segmentDf[['X', 'Y','Z']])
-        print(a)
-    return 
+        simplyfiedSegment = simplifySegmentXYZ(segmentDf[['X', 'Y','Z']])
+        simplyfiedSegment['r_id'] = segmentValue
+        segmentsList.append(simplyfiedSegment)
+    simplyfiedSegments = pd.concat(segmentsList)
+    return simplyfiedSegments
         
 #add the code from the algorythm from the rdp PENDING
 #make the df fill again with interpolated values.  DONE
@@ -248,6 +249,7 @@ df = saveCsvtoDf(path2)
 
 
 b = makeSegmentBlocks(df)
+
 
 #b = simplifySegmentXYZ(df)
 
