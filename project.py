@@ -20,6 +20,9 @@ print('Input .csv file path ../InputData/ww_ten_points.csv')
 #path = input()
 path = '../InputData/ww_ten_points.csv'
 
+path2 = './input_test_points.csv'
+
+
 
 def showFileContents(path):
     
@@ -31,7 +34,7 @@ def showFileContents(path):
     return
 
 def saveCsvtoDf(path):
-    df = pd.read_csv(path, usecols= ['Z','X','Y'])
+    df = pd.read_csv(path, usecols= ['r_id','Z','X','Y'])
     return df
 
 
@@ -101,11 +104,11 @@ def customPlot(lst:list):
 def dfToListXYZ(df):
     size = df.shape[0]
     general = []
-    
     for i,elemnt in enumerate(range(size)):
-        general.append(df['X'][i])
-        general.append(df['Y'][i])
-        general.append(df['Z'][i])
+      
+        general.append(df['X'].iloc[i])
+        general.append(df['Y'].iloc[i])
+        general.append(df['Z'].iloc[i])
     return general
 
 def dfToListXY(df):
@@ -123,7 +126,9 @@ def fromArrayToDF(arr):
 
 def simplifyDf3D(df,epsilon:float):
     lst = dfToListXYZ(df)
-    M = np.array(lst).reshape(10, 3)
+    
+    reshapeSize = int(len(lst)/3)
+    M = np.array(lst).reshape(reshapeSize, 3)
     simplyfiedM = rdp(M,epsilon)
     newDf = fromArrayToDF(simplyfiedM)
     return newDf
@@ -139,22 +144,22 @@ def refilldf(newdf,olddf):
     funtion = getInterpolateFunction(x,z)
 
     #b = pd.concat([newdf,a]).drop_duplicates().reset_index(drop=True)
-    
     for i,element in enumerate(range(oldSize)):
         for j,newElement in enumerate(range(newSize)):
-            if(resetedDf['X'][i] == newdf['X'][j]):
-                resetedDf.loc[i,('Z')] = newdf.loc[j,('Z')]    
+            if(resetedDf['X'].iloc[i] == newdf['X'].iloc[j] and resetedDf['Y'].iloc[i] == newdf['Y'].iloc[j]):
+                resetedDf.loc[resetedDf.index[i],('Z')] = newdf.loc[newdf.index[j],('Z')]    
         
     
     resetDfSize = resetedDf.shape[0]
     for i,element in enumerate(range(resetDfSize)):
-        if(resetedDf.loc[i,('Z')] == 0 ):
-            resetedDf.loc[i,('Z')] = funtion(resetedDf.loc[i,('X')])
+        if(resetedDf.loc[resetedDf.index[i],('Z')] == 0 ):
+            a = funtion(resetedDf.loc[resetedDf.index[i],('X')])
+            resetedDf.loc[resetedDf.index[i],('Z')] = a
 
     return resetedDf
 
 def getInterpolateFunction(x,z):
-    f = interpolate.interp1d(x, z)
+    f = interpolate.interp1d(x, z,fill_value="extrapolate")
     return f
 
 
@@ -214,6 +219,16 @@ def updateIntersection(df):
         else:
             pass
         
+def makeSegmentBlocks(df):
+    #list of segments
+    segments = df['r_id'].unique()
+    segmentsList = []
+    size = df.shape[0]
+    for segmentValue in segments:
+        segmentDf = df.loc[df['r_id'] == segmentValue]
+        a = simplifySegmentXYZ(segmentDf[['X', 'Y','Z']])
+        print(a)
+    return 
         
 #add the code from the algorythm from the rdp PENDING
 #make the df fill again with interpolated values.  DONE
@@ -221,17 +236,27 @@ def updateIntersection(df):
 
 # passes a the data 
 
-df = saveCsvtoDf(path)
+df = saveCsvtoDf(path2)
+
+#sa = keepFlag(df);
+
 
 #Makes the data into 2d
-a = dataTo2d(df)
+#a = dataTo2d(df)
 
 #implements simplidication THIS IS the function you need to use Stevie
 
-b = simplifySegmentXYZ(df)
+
+b = makeSegmentBlocks(df)
+
+#b = simplifySegmentXYZ(df)
 
 #fig = customePlotData(b)
 #fig2 = customePlotData(df)
+
+
+
+
 
 
 #customPlot(a)
