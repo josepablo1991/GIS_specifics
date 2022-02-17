@@ -225,17 +225,15 @@ def connectedR(df):
 # If keepFlag = 1, select a row where:
 # "the original row's connectedR = the target row's r_id" 
 # & "the original row's r_id = the target row's connectedR"
-# Update the X and Y with the target row's.
+# Update the Z with the target row's.
 def updateIntersection(df):
     for i in df.index:
         if df.at[i, 'keepFlag'] == 1:
             orid = df.at[i, 'r_id']
             ocr = df.at[i, 'connectedR']
             targetRow = df.loc[(df['r_id'] == ocr) & (df['connectedR'] == orid)]
-            originalX = targetRow.X.tolist()
-            originalY = targetRow.Y.tolist()
-            df.at[i, 'X'] = originalX[0]
-            df.at[i, 'Y'] = originalY[0]
+            originalZ = targetRow.Z.tolist()
+            df.at[i, 'Z'] = originalZ[0]
         else:
             pass
     return df
