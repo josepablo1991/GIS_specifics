@@ -134,14 +134,18 @@ def simplifyDf3D(df,epsilon:float):
     return newDf
 
 
-
+#This function is responsible for restoring the simplyfied segment to its original form but with 
+#interpolated Z values with simple line interpolation
 def refilldf(newdf,olddf):
     newSize = newdf.shape[0]
     resetedDf =olddf.assign(Z=0)
     oldSize = resetedDf.shape[0]
     x = newdf.loc[:,('X')].tolist()
+    y = newdf.loc[:,('Y')].tolist()
     z = newdf.loc[:,('Z')].tolist()
-    funtion = getInterpolateFunction(x,z)
+    funtion = getInterpolateFunction(x,y,z,oldSize)
+    step = getStep(z,oldSize)
+    trend = step > 0 
 
     #b = pd.concat([newdf,a]).drop_duplicates().reset_index(drop=True)
     for i,element in enumerate(range(oldSize)):
@@ -149,24 +153,40 @@ def refilldf(newdf,olddf):
             if(resetedDf['X'].iloc[i] == newdf['X'].iloc[j] and resetedDf['Y'].iloc[i] == newdf['Y'].iloc[j]):
                 resetedDf.loc[resetedDf.index[i],('Z')] = newdf.loc[newdf.index[j],('Z')]    
         
-    
+    #Refilling empty segment table
     resetDfSize = resetedDf.shape[0]
     for i,element in enumerate(range(resetDfSize)):
         if(resetedDf.loc[resetedDf.index[i],('Z')] == 0 ):
             a = funtion(resetedDf.loc[resetedDf.index[i],('X')])
-            resetedDf.loc[resetedDf.index[i],('Z')] = a
+            prev = resetedDf.loc[resetedDf.index[i-1],('Z')]
+            #resetedDf.loc[resetedDf.index[i],('Z')] = resetedDf.loc[resetedDf.index[0],('Z')] + step*(i-1)
+            if(trend and a<prev):
+                resetedDf.loc[resetedDf.index[i],('Z')] = a
+            elif(trend and a > prev): 
+                resetedDf.loc[resetedDf.index[i],('Z')] =  resetedDf.loc[resetedDf.index[i-1],('Z')]
+            elif(not trend and a < prev):
+                resetedDf.loc[resetedDf.index[i],('Z')] = a
+            else:
+                resetedDf.loc[resetedDf.index[i],('Z')] =  resetedDf.loc[resetedDf.index[i-1],('Z')]
+
 
     return resetedDf
 
-def getInterpolateFunction(x,z):
+def getInterpolateFunction(x,y,z,size):
+    
     f = interpolate.interp1d(x, z,fill_value="extrapolate")
     return f
 
+def getStep(z,size):
+    d =  z[0]- z[-1]
+    step = d/size
+    return step
+    
 
 #implements simplidication of segment
 
 def simplifySegmentXYZ(df):
-    a = simplifyDf3D(df,0.001)
+    a = simplifyDf3D(df,0.0005)
     b = refilldf(a,df)
     return b
 
@@ -255,8 +275,6 @@ b = makeSegmentBlocks(df)
 
 #fig = customePlotData(b)
 #fig2 = customePlotData(df)
-
-
 
 
 
