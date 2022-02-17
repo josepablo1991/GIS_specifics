@@ -198,9 +198,9 @@ def simplifySegmentXYZ(df):
 def keepFlag(df): 
     groupedRiver = df.groupby('r_id')
     startsEnds = pd.concat([groupedRiver.head(1), groupedRiver.tail(1)])
-    oids = [i for i in startsEnds['o_id']]
+    oids = [i for i in startsEnds.index]
     df['keepFlag'] = np.where(df.duplicated(['X', 'Y'], keep=False), 1, 0)
-    df['keepFlag'] = np.where(df['o_id'].isin(oids), 2, df['keepFlag'])
+    df['keepFlag'] = np.where(df.index.isin(oids), 2, df['keepFlag'])
     return df
 
 
@@ -238,6 +238,7 @@ def updateIntersection(df):
             df.at[i, 'Y'] = originalY[0]
         else:
             pass
+    return df
         
 def makeSegmentBlocks(df):
     #list of segments
@@ -245,7 +246,7 @@ def makeSegmentBlocks(df):
     segmentsList = []
     for segmentValue in segments:
         segmentDf = df.loc[df['r_id'] == segmentValue]
-        simplyfiedSegment = simplifySegmentXYZ(segmentDf[['X', 'Y','Z']])
+        simplyfiedSegment = simplifySegmentXYZ(segmentDf[['X','Y','Z']])
         simplyfiedSegment['r_id'] = segmentValue
         segmentsList.append(simplyfiedSegment)
     simplyfiedSegments = pd.concat(segmentsList)
@@ -269,7 +270,9 @@ df = saveCsvtoDf(path2)
 
 
 b = makeSegmentBlocks(df)
-
+c = keepFlag(b)
+d = connectedR(c)
+e = updateIntersection(d)
 
 #b = simplifySegmentXYZ(df)
 
