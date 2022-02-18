@@ -10,7 +10,8 @@ import csv
 import pandas as pd
 import matplotlib.pyplot as plt
 import mpu
-from rdp import rdp
+#from rdp import rdp
+from ramer_douglas_peuker import rdp
 import numpy as np
 from scipy import interpolate
 
@@ -274,8 +275,8 @@ e = updateIntersection(d)
 
 #b = simplifySegmentXYZ(df)
 
-#fig = customePlotData(b)
-#fig2 = customePlotData(df)
+#fig = customePlotData(df)
+#fig2 = customePlotData(e)
 
 
 
