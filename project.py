@@ -24,7 +24,7 @@ path = '../InputData/ww_ten_points.csv'
 path2 = './input_test_points.csv'
 
 
-
+#Shows csv dile content
 def showFileContents(path):
     
     with open(path, newline='') as csvfile:
@@ -34,12 +34,13 @@ def showFileContents(path):
     
     return
 
+#Converts any csv into a pandas DF 
 def saveCsvtoDf(path):
     df = pd.read_csv(path, usecols= ['r_id','Z','X','Y'])
     return df
 
-
-def customePlotData(df):
+#Makes Plots in the 3D space
+def customePlot3D(df):
     x = df.X
     y = df.Y
     z = df.Z
@@ -60,7 +61,7 @@ def customePlotData(df):
         plt.pause(300)
     return fig
 
-
+#Convert data set on to a 2D data set by calculating the distance between X and Y
 def dataTo2d(df):
     size = df.shape[0]
     newList = []
@@ -80,15 +81,15 @@ def dataTo2d(df):
     return newList
             
             
-        
+#Calcultes distance between 2 points 
 def calculteDistance(lat1:float,lon1:float,lat2:float,lon2:float):
 
     dist = mpu.haversine_distance((lat1, lon1), (lat2, lon2))
 
     return dist
 
-
-def customPlot(lst:list):
+#Makes Plots in the 2D space
+def customPlot2D(lst:list):
     x = []
     y = []
     general = []
@@ -102,6 +103,7 @@ def customPlot(lst:list):
     #print(general)
     return  plt.scatter(x,y)
 
+#Converts a df with XYZ into a list
 def dfToListXYZ(df):
     size = df.shape[0]
     general = []
@@ -112,6 +114,7 @@ def dfToListXYZ(df):
         general.append(df['Z'].iloc[i])
     return general
 
+#Converts a df with XY into a list
 def dfToListXY(df):
     size = df.shape[0]
     general = []
@@ -121,10 +124,12 @@ def dfToListXY(df):
         general.append(df['Y'][i])
     return general
 
+#Converts a df with XYZ into an pandas.Array 
 def fromArrayToDF(arr):
     df = pd.DataFrame(data=arr, columns=["X", "Y","Z"])
     return df
 
+#returns a simplified df using the DP algorythm
 def simplifyDf3D(df,epsilon:float):
     lst = dfToListXYZ(df)
     
@@ -144,7 +149,7 @@ def refilldf(newdf,olddf):
     x = newdf.loc[:,('X')].tolist()
     y = newdf.loc[:,('Y')].tolist()
     z = newdf.loc[:,('Z')].tolist()
-    funtion = getInterpolateFunction(x,y,z,oldSize)
+    funtion = getInterpolateFunction(x,z,oldSize)
     step = getStep(z,oldSize)
     trend = step > 0 
 
@@ -173,11 +178,12 @@ def refilldf(newdf,olddf):
 
     return resetedDf
 
-def getInterpolateFunction(x,y,z,size):
-    
+#returns a scipy interpolation function
+def getInterpolateFunction(x:list,z:list,size):
     f = interpolate.interp1d(x, z,fill_value="extrapolate")
     return f
 
+#returns the equal diference between each value
 def getStep(z,size):
     d =  z[0]- z[-1]
     step = d/size
@@ -185,7 +191,6 @@ def getStep(z,size):
     
 
 #implements simplidication of segment
-
 def simplifySegmentXYZ(df):
     a = simplifyDf3D(df,0.0005)
     b = refilldf(a,df)
@@ -238,7 +243,8 @@ def updateIntersection(df):
         else:
             pass
     return df
-        
+
+#takes a df with different segment ids and and returns a simplified version 
 def makeSegmentBlocks(df):
     #list of segments
     segments = df['r_id'].unique()
@@ -275,8 +281,8 @@ e = updateIntersection(d)
 
 #b = simplifySegmentXYZ(df)
 
-#fig = customePlotData(df)
-#fig2 = customePlotData(e)
+#fig = customePlot3D(df)
+#fig2 = customePlot3D(e)
 
 
 
