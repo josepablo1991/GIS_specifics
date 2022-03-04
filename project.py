@@ -39,6 +39,9 @@ def saveCsvtoDf(path):
     df = pd.read_csv(path, usecols= ['r_id','Z','X','Y'])
     return df
 
+
+
+
 #Makes Plots in the 3D space
 def customePlot3D(df):
     x = df.X
@@ -257,10 +260,39 @@ def makeSegmentBlocks(df):
     simplyfiedSegments = pd.concat(segmentsList)
     return simplyfiedSegments
         
-#add the code from the algorythm from the rdp PENDING
-#make the df fill again with interpolated values.  DONE
-#add this simplify segment --> df X,Y,Z ---> df same shape X,Y,Z 
 
+
+def plotResults(before_df,after_df):
+    before_sections = getSections(before_df)
+    after_sections = getSections(after_df)
+    ax = plt.axes(projection='3d')
+    plt.title("Simplification Comparison")
+    plt.xlabel("lat")
+    plt.ylabel("lng")
+    for section_df in before_sections:
+        xdata = section_df.X
+        ydata = section_df.Y
+        zdata = section_df.Z
+        ax.plot3D(xdata,ydata, zdata, 'blue')
+    for section_df in after_sections:
+        xdata = section_df.X
+        ydata = section_df.Y
+        zdata = section_df.Z
+        ax.plot3D(xdata,ydata, zdata, 'Green')
+    plt.show()
+
+    
+
+def getSections(df):
+    sections = df['r_id'].unique()
+    a = []
+    for x in sections:
+        queryString = 'r_id == ' + str(x)
+        queryResult = df.query(queryString)
+        a.append(queryResult)
+    
+    return a # df[]
+    
 # passes a the data 
 
 df = saveCsvtoDf(path2)
@@ -279,12 +311,4 @@ c = keepFlag(b)
 d = connectedR(c)
 e = updateIntersection(d)
 
-#b = simplifySegmentXYZ(df)
-
-#fig = customePlot3D(df)
-#fig2 = customePlot3D(e)
-
-
-
-
-#customPlot(a)
+plotResults(df,e)
