@@ -19,7 +19,7 @@ from scipy import interpolate
 # The simplest test data consisting of ten nodes
 path1 = '../ww_ten_points.csv'
 # The more complicated case consisting of three river segments
-path2 = '../input_test_points.csv'
+path2 = './input_test_points.csv'
 
 
 ### FUNCTIONS ###
@@ -220,6 +220,43 @@ def makeSegmentBlocks(df):
     simplyfiedSegments = pd.concat(segmentsList)
     return simplyfiedSegments
         
+def plotResults(before_df,after_df):
+    before_sections = getSections(before_df)
+    after_sections = getSections(after_df)
+    font1 = {'family':'avenir','color':'black','size':12}
+
+    ax = plt.axes(projection='3d')
+    plt.title("Simplification Comparison",fontdict=font1)
+    plt.xlabel("lat",fontdict=font1)
+    plt.ylabel("lng", fontdict=font1)
+    for section_df in before_sections:
+        xdata = section_df.X
+        ydata = section_df.Y
+        zdata = section_df.Z
+        ax.plot3D(xdata,ydata, zdata, 'blue')
+        ax.scatter3D(xdata,ydata, zdata, 'blue' , label='Old Sections')
+
+    for section_df in after_sections:
+        xdata = section_df.X
+        ydata = section_df.Y
+        zdata = section_df.Z
+        ax.plot3D(xdata,ydata, zdata, 'Green')
+        ax.scatter3D(xdata,ydata, zdata, 'Green' , label='Symplified')
+    ax.legend()
+    ax.legend()
+    plt.show()
+
+    
+
+def getSections(df):
+    sections = df['r_id'].unique()
+    a = []
+    for x in sections:
+        queryString = 'r_id == ' + str(x)
+        queryResult = df.query(queryString)
+        a.append(queryResult)
+    
+    return a # df[]
 
 ### MAIN ###
 df = saveCsvtoDf(path2)
@@ -228,8 +265,11 @@ c = keepFlag(b)
 d = connectedR(c)
 output = updateIntersection(d)
 
+#Vizualization
+plotResults(df,output)
+
 # Export to csv file
-output.to_csv('../input_test_points.csv')
+output.to_csv('../output_test_points.csv')
 
 
 # Add plotting and figures below
