@@ -220,6 +220,7 @@ def makeSegmentBlocks(df):
     simplyfiedSegments = pd.concat(segmentsList)
     return simplyfiedSegments
         
+#Plots results and compares polylines
 def plotResults(before_df,after_df):
     before_sections = getSections(before_df)
     after_sections = getSections(after_df)
@@ -247,7 +248,7 @@ def plotResults(before_df,after_df):
     plt.show()
 
     
-
+# gets river Sections for plotting
 def getSections(df):
     sections = df['r_id'].unique()
     a = []
